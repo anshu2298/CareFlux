@@ -1,0 +1,10 @@
+.chart-header {
+  margin-bottom: 2rem;
+}
+
+.chart-header h2 {
+  text-align: center;
+  margin: 0;
+  font-weight: 600;
+  color: #2d3748;
+}
