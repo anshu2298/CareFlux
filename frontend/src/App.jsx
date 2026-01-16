@@ -1,73 +1,77 @@
 import { useState, useEffect } from "react";
+import FilterBar from "./components/FilterBar/FilterBar";
+import KPISection from "./components/KPISection/KPISection";
+import TopFilmsChart from "./components/TopFilmsCharts/TopFilmsChart";
+import RevenueCategoryChart from "./components/RevenueCategoryChart/RevenueCategoryChart";
+import CustomerTable from "./components/CustomerTable/CustomerTable";
+import RecentTransactions from "./components/RecentTransactions/RecentTransactions";
 import "./App.css";
 
 function App() {
-  const [backendStatus, setBackendStatus] =
-    useState("checking");
+  const [filters, setFilters] = useState({
+    store: "all",
+    startDate: "2005-01-01",
+    endDate: "2006-12-31",
+  });
 
+  const [isLoading, setIsLoading] = useState(false);
+
+  const handleApplyFilters = (newFilters) => {
+    setFilters(newFilters);
+  };
+
+  // Simulate data update when filters change
   useEffect(() => {
-    fetch("http://localhost:5000/api/health")
-      .then((res) => res.json())
-      .then((data) => {
-        if (data.status === "healthy") {
-          setBackendStatus("online");
-        }
-      })
-      .catch(() => setBackendStatus("offline"));
-  }, []);
+    setIsLoading(true);
+    const timer = setTimeout(() => {
+      setIsLoading(false);
+    }, 8000); // Simulate network delay
+
+    return () => clearTimeout(timer);
+  }, [filters]);
 
   return (
-    <div className='app-container'>
-      <header className='hero'>
-        <img
-          src='/logo.png'
-          alt='CareFlux Logo'
-          className='app-logo'
-        />
-        <h1 className='title'>CareFlux</h1>
-        <p className='subtitle'>
-          Empowering modern care management with a seamless
-          and intelligent workflow.
-        </p>
-        <div className={`status-badge ${backendStatus}`}>
-          Backend Status:{" "}
-          {backendStatus.charAt(0).toUpperCase() +
-            backendStatus.slice(1)}
-        </div>
-      </header>
+    <div className='App'>
+      <FilterBar
+        initialFilters={filters}
+        onApply={handleApplyFilters}
+      />
 
-      <main className='card-grid'>
-        <div className='card'>
-          <h3>Frontend Ready</h3>
-          <p>
-            Vite + React (JavaScript) setup is complete.
-            Start building your UI components in the{" "}
-            <code>src</code> folder.
-          </p>
-          <button className='btn-primary'>
-            Learn More
-          </button>
+      <main className='content'>
+        {isLoading && (
+          <div className='loading-overlay'>
+            <div className='spinner'></div>
+            <span>Updating Data...</span>
+          </div>
+        )}
+
+        <KPISection isLoading={isLoading} />
+
+        <div
+          className='dashboard-grid'
+          style={{
+            opacity: isLoading ? 0.5 : 1,
+            transition: "opacity 0.3s",
+          }}
+        >
+          <TopFilmsChart />
+          <RevenueCategoryChart />
         </div>
 
-        <div className='card'>
-          <h3>Backend Secure</h3>
-          <p>
-            Node.js and Express are configured with ES
-            modules. API routes are ready for
-            implementation.
-          </p>
-          <button className='btn-primary'>View Docs</button>
-        </div>
-
-        <div className='card'>
-          <h3>Design System</h3>
-          <p>
-            Modern CSS variables and glassmorphism elements
-            are integrated for a premium user experience.
-          </p>
-          <button className='btn-primary'>
-            Explore Theme
-          </button>
+        <div
+          className='bottom-grid'
+          style={{
+            opacity: isLoading ? 0.5 : 1,
+            transition: "opacity 0.3s",
+            marginTop: "2rem",
+          }}
+        >
+          <div className='table-col'>
+            <CustomerTable isLoading={isLoading} />
+          </div>
+          <div className='feed-col'>
+            <RecentTransactions isLoading={isLoading} />
+          </div>
         </div>
       </main>
     </div>

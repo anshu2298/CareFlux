@@ -1,0 +1,63 @@
+.transactions-header {
+  margin-bottom: 1.5rem;
+}
+
+.transactions-header h3 {
+  margin: 0;
+  font-size: 1.125rem;
+  color: #2d3748;
+  font-weight: 600;
+}
+
+.transactions-list {
+  max-height: 400px;
+  overflow-y: auto;
+  /* Hide scrollbar */
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+.transactions-list::-webkit-scrollbar {
+  display: none;
+}
+
+.transaction-item {
+  padding: 12px 0;
+  border-bottom: 1px solid #edf2f7;
+}
+
+.transaction-item:last-child {
+  border-bottom: none;
+}
+
+.transaction-main {
+  font-size: 0.9375rem;
+  line-height: 1.5;
+  color: #4a5568;
+}
+
+.tx-customer {
+  font-weight: 600;
+  color: #2d3748;
+}
+
+.tx-film {
+  font-weight: 500;
+  color: #3182ce;
+}
+
+.tx-price {
+  font-weight: 600;
+  color: #38a169;
+}
+
+.transaction-meta {
+  font-size: 0.75rem;
+  color: #a0aec0;
+  margin-top: 4px;
+}
+
+.fade-updating {
+  opacity: 0.4;
+  transition: opacity 0.3s;
+}
