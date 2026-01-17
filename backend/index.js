@@ -1,46 +1,74 @@
-import express from "express";
-import cors from "cors";
+import { ApolloServer } from "@apollo/server";
+import { startStandaloneServer } from "@apollo/server/standalone";
+import FilmAnalyticsService from "./services/FilmAnalyticsService.js";
+import RevenueService from "./services/RevenueService.js";
+import CustomerAnalyticsService from "./services/CustomerAnalyticsService.js";
 import dotenv from "dotenv";
 
-// Load environment variables
 dotenv.config();
 
-const app = express();
-const PORT = process.env.PORT || 5000;
+const typeDefs = `#graphql
+  type FilmStats {
+    id: ID!
+    title: String!
+    rentalCount: Int!
+  }
 
-// Middleware
-app.use(cors());
-app.use(express.json());
+  type CategoryRevenue {
+    name: String!
+    revenue: Float!
+  }
 
-// Basic Route
-app.get("/", (req, res) => {
-  res.json({
-    message: "Welcome to the CareFlux API",
-    version: "1.0.0",
-    status: "online",
-  });
+  type CustomerStats {
+    id: ID!
+    fullName: String!
+    totalRentals: Int!
+    totalSpent: Float!
+  }
+
+  type KeyMetrics {
+    totalRevenue: Float!
+    activeRentals: Int!
+  }
+
+  type Transaction {
+    customerName: String!
+    filmTitle: String!
+    amount: Float!
+    timestamp: String!
+  }
+
+  type Query {
+    getTopRentedFilms(storeId: Int, startDate: String, endDate: String): [FilmStats]
+    getRevenueByCategory(storeId: Int, startDate: String, endDate: String): [CategoryRevenue]
+    getTopCustomers(storeId: Int, startDate: String, endDate: String): [CustomerStats]
+    getKeyMetrics(storeId: Int, startDate: String, endDate: String): KeyMetrics
+    getRecentTransactions(storeId: Int, startDate: String, endDate: String, limit: Int): [Transaction]
+  }
+`;
+
+const resolvers = {
+  Query: {
+    getTopRentedFilms: (_, args) =>
+      FilmAnalyticsService.getTopRentedFilms(args),
+    getRevenueByCategory: (_, args) =>
+      RevenueService.getRevenueByCategory(args),
+    getTopCustomers: (_, args) =>
+      CustomerAnalyticsService.getTopCustomers(args),
+    getKeyMetrics: (_, args) =>
+      RevenueService.getKeyMetrics(args),
+    getRecentTransactions: (_, args) =>
+      CustomerAnalyticsService.getRecentTransactions(args),
+  },
+};
+
+const server = new ApolloServer({
+  typeDefs,
+  resolvers,
 });
 
-// Sample API route
-app.get("/api/health", (req, res) => {
-  res.json({
-    status: "healthy",
-    timestamp: new Date().toISOString(),
-  });
+const { url } = await startStandaloneServer(server, {
+  listen: { port: process.env.PORT || 5000 },
 });
 
-// Error handling middleware
-app.use((err, req, res, next) => {
-  console.error(err.stack);
-  res.status(500).json({
-    error: "Something went wrong!",
-    message: err.message,
-  });
-});
-
-// Start server
-app.listen(PORT, () => {
-  console.log(
-    `🚀 Server is running on http://localhost:${PORT}`
-  );
-});
+console.log(`🚀 Server ready at ${url}`);
