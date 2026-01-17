@@ -110,7 +110,14 @@ class CustomerAnalyticsService {
       );
     }
 
-    return await query;
+    const transactions = await query;
+    return transactions.map((tx) => ({
+      ...tx,
+      timestamp:
+        tx.timestamp instanceof Date
+          ? tx.timestamp.toISOString()
+          : tx.timestamp,
+    }));
   }
 }
 
