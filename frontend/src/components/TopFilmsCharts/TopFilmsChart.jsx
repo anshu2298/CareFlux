@@ -1,3 +1,4 @@
+import { useQuery } from "@apollo/client";
 import {
   BarChart,
   Bar,
@@ -8,29 +9,55 @@ import {
   ResponsiveContainer,
 } from "recharts";
 import Card from "../Card/Card";
+import { GET_TOP_RENTED_FILMS } from "../../graphql/queries";
 import "./TopFilmsChart.css";
 
-const data = [
-  { title: "Academy Dinosaur", count: 34 },
-  { title: "Bucket Brotherhood", count: 32 },
-  { title: "Rocketeer Mother", count: 31 },
-  { title: "Forward Temple", count: 30 },
-  { title: "Grit Clockwork", count: 29 },
-];
+const TopFilmsChart = ({ filters }) => {
+  const { data, loading, error } = useQuery(
+    GET_TOP_RENTED_FILMS,
+    {
+      variables: {
+        storeId:
+          filters.store === "all"
+            ? null
+            : parseInt(filters.store),
+        startDate: filters.startDate,
+        endDate: filters.endDate,
+      },
+    },
+  );
 
-const TopFilmsChart = () => {
+  const chartData = data?.getTopRentedFilms || [];
+
   return (
     <Card>
       <div className='chart-header'>
         <h2>Top 5 Rented Films</h2>
       </div>
-      <div style={{ height: 450, width: "100%" }}>
+      <div
+        style={{
+          height: 450,
+          width: "100%",
+          position: "relative",
+        }}
+      >
+        {loading && (
+          <div className='chart-loading-overlay'>
+            Loading...
+          </div>
+        )}
+        {error && (
+          <div className='error'>
+            Error loading chart data
+          </div>
+        )}
+
         <ResponsiveContainer
           width='100%'
           height='100%'
         >
           <BarChart
-            data={data}
+            data={chartData}
             margin={{
               top: 5,
               right: 30,
@@ -92,7 +119,7 @@ const TopFilmsChart = () => {
               labelStyle={{ fontWeight: "bold" }}
             />
             <Bar
-              dataKey='count'
+              dataKey='rentalCount'
               fill='#3182ce'
               radius={[4, 4, 0, 0]}
               barSize={40}

@@ -1,75 +1,44 @@
-import React, { useState } from "react";
+import { useState, useEffect } from "react";
+import { useQuery } from "@apollo/client";
 import Card from "../Card/Card";
+import { GET_TOP_CUSTOMERS } from "../../graphql/queries";
 import "./CustomerTable.css";
 
-const initialData = [
-  { id: 1, name: "MARY SMITH", rentals: 32, spent: 118.68 },
-  {
-    id: 2,
-    name: "PATRICIA JOHNSON",
-    rentals: 28,
-    spent: 128.72,
-  },
-  {
-    id: 3,
-    name: "LINDA WILLIAMS",
-    rentals: 33,
-    spent: 135.67,
-  },
-  {
-    id: 4,
-    name: "BARBARA JONES",
-    rentals: 30,
-    spent: 140.3,
-  },
-  {
-    id: 5,
-    name: "ELIZABETH BROWN",
-    rentals: 27,
-    spent: 105.73,
-  },
-  {
-    id: 6,
-    name: "JENNIFER DAVIS",
-    rentals: 31,
-    spent: 115.69,
-  },
-  {
-    id: 7,
-    name: "MARIA GARCIA",
-    rentals: 29,
-    spent: 120.71,
-  },
-  {
-    id: 8,
-    name: "SUSAN WILSON",
-    rentals: 35,
-    spent: 155.65,
-  },
-  {
-    id: 9,
-    name: "MARGARET MOORE",
-    rentals: 30,
-    spent: 110.7,
-  },
-  {
-    id: 10,
-    name: "DOROTHY TAYLOR",
-    rentals: 26,
-    spent: 100.74,
-  },
-];
+const CustomerTable = ({ filters }) => {
+  const {
+    data: apiData,
+    loading,
+    error,
+  } = useQuery(GET_TOP_CUSTOMERS, {
+    variables: {
+      storeId:
+        filters.store === "all"
+          ? null
+          : parseInt(filters.store),
+      startDate: filters.startDate,
+      endDate: filters.endDate,
+    },
+  });
 
-const CustomerTable = ({ isLoading }) => {
-  const [data, setData] = useState(initialData);
+  const [data, setData] = useState([]);
   const [sortOrder, setSortOrder] = useState("desc");
+
+  useEffect(() => {
+    if (apiData?.getTopCustomers) {
+      const customers = [...apiData.getTopCustomers].sort(
+        (a, b) => b.totalSpent - a.totalSpent,
+      );
+      setData(customers);
+      setSortOrder("desc");
+    }
+  }, [apiData]);
 
   const handleSort = () => {
     const newOrder = sortOrder === "desc" ? "asc" : "desc";
     const sortedData = [...data].sort((a, b) => {
       return newOrder === "desc"
-        ? b.spent - a.spent
-        : a.spent - b.spent;
+        ? b.totalSpent - a.totalSpent
+        : a.totalSpent - b.totalSpent;
     });
     setData(sortedData);
     setSortOrder(newOrder);
@@ -82,15 +51,21 @@ const CustomerTable = ({ isLoading }) => {
         <button
           className='sort-btn'
           onClick={handleSort}
+          disabled={loading}
         >
           Sort by Spent {sortOrder === "desc" ? "↓" : "↑"}
         </button>
       </div>
       <div
         className={`table-container ${
-          isLoading ? "fade-updating" : ""
+          loading ? "fade-updating" : ""
         }`}
       >
+        {error && (
+          <div className='error'>
+            Error loading customers
+          </div>
+        )}
         <table className='customer-table'>
           <thead>
             <tr>
@@ -105,11 +80,11 @@ const CustomerTable = ({ isLoading }) => {
               <tr key={customer.id}>
                 <td>{customer.id}</td>
                 <td className='customer-name'>
-                  {customer.name}
+                  {customer.fullName}
                 </td>
-                <td>{customer.rentals}</td>
+                <td>{customer.totalRentals}</td>
                 <td className='spent-cell'>
-                  ${customer.spent.toFixed(2)}
+                  ${customer.totalSpent.toFixed(2)}
                 </td>
               </tr>
             ))}

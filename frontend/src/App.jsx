@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import FilterBar from "./components/FilterBar/FilterBar";
 import KPISection from "./components/KPISection/KPISection";
 import TopFilmsChart from "./components/TopFilmsCharts/TopFilmsChart";
@@ -14,21 +14,9 @@ function App() {
     endDate: "2006-12-31",
   });
 
-  const [isLoading, setIsLoading] = useState(false);
-
   const handleApplyFilters = (newFilters) => {
     setFilters(newFilters);
   };
-
-  // Simulate data update when filters change
-  useEffect(() => {
-    setIsLoading(true);
-    const timer = setTimeout(() => {
-      setIsLoading(false);
-    }, 8000); // Simulate network delay
-
-    return () => clearTimeout(timer);
-  }, [filters]);
 
   return (
     <div className='App'>
@@ -38,39 +26,22 @@ function App() {
       />
 
       <main className='content'>
-        {isLoading && (
-          <div className='loading-overlay'>
-            <div className='spinner'></div>
-            <span>Updating Data...</span>
-          </div>
-        )}
+        <KPISection filters={filters} />
 
-        <KPISection isLoading={isLoading} />
-
-        <div
-          className='dashboard-grid'
-          style={{
-            opacity: isLoading ? 0.5 : 1,
-            transition: "opacity 0.3s",
-          }}
-        >
-          <TopFilmsChart />
-          <RevenueCategoryChart />
+        <div className='dashboard-grid'>
+          <TopFilmsChart filters={filters} />
+          <RevenueCategoryChart filters={filters} />
         </div>
 
         <div
           className='bottom-grid'
-          style={{
-            opacity: isLoading ? 0.5 : 1,
-            transition: "opacity 0.3s",
-            marginTop: "2rem",
-          }}
+          style={{ marginTop: "2rem" }}
         >
           <div className='table-col'>
-            <CustomerTable isLoading={isLoading} />
+            <CustomerTable filters={filters} />
           </div>
           <div className='feed-col'>
-            <RecentTransactions isLoading={isLoading} />
+            <RecentTransactions filters={filters} />
           </div>
         </div>
       </main>

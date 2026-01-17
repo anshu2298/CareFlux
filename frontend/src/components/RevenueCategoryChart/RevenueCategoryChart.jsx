@@ -1,4 +1,4 @@
-import React from "react";
+import { useQuery } from "@apollo/client";
 import {
   PieChart,
   Pie,
@@ -8,16 +8,8 @@ import {
   ResponsiveContainer,
 } from "recharts";
 import Card from "../Card/Card";
+import { GET_REVENUE_BY_CATEGORY } from "../../graphql/queries";
 import "./RevenueCategoryChart.css";
-
-const data = [
-  { name: "Sports", value: 4500 },
-  { name: "Sci-Fi", value: 3800 },
-  { name: "Animation", value: 3200 },
-  { name: "Drama", value: 2900 },
-  { name: "Comedy", value: 2700 },
-  { name: "Action", value: 2500 },
-];
 
 const COLORS = [
   "#3182ce",
@@ -28,20 +20,58 @@ const COLORS = [
   "#319795",
 ];
 
-const RevenueCategoryChart = () => {
+const RevenueCategoryChart = ({ filters }) => {
+  const { data, loading, error } = useQuery(
+    GET_REVENUE_BY_CATEGORY,
+    {
+      variables: {
+        storeId:
+          filters.store === "all"
+            ? null
+            : parseInt(filters.store),
+        startDate: filters.startDate,
+        endDate: filters.endDate,
+      },
+    },
+  );
+
+  const chartData = (data?.getRevenueByCategory || []).map(
+    (item) => ({
+      name: item.name,
+      value: item.revenue,
+    }),
+  );
+
   return (
     <Card>
       <div className='chart-header'>
         <h2>Revenue by Category</h2>
       </div>
-      <div style={{ height: 450, width: "100%" }}>
+      <div
+        style={{
+          height: 450,
+          width: "100%",
+          position: "relative",
+        }}
+      >
+        {loading && (
+          <div className='chart-loading-overlay'>
+            Loading...
+          </div>
+        )}
+        {error && (
+          <div className='error'>
+            Error loading chart data
+          </div>
+        )}
+
         <ResponsiveContainer
           width='100%'
           height='100%'
         >
           <PieChart>
             <Pie
-              data={data}
+              data={chartData}
               cx='50%'
               cy='50%'
               innerRadius={80}
@@ -55,7 +85,7 @@ const RevenueCategoryChart = () => {
                 strokeWidth: 2,
               }}
             >
-              {data.map((entry, index) => (
+              {chartData.map((entry, index) => (
                 <Cell
                   key={`cell-${index}`}
                   fill={COLORS[index % COLORS.length]}
@@ -64,14 +94,14 @@ const RevenueCategoryChart = () => {
             </Pie>
             <Tooltip
               formatter={(value, name, props) => {
-                const total = data.reduce(
+                const total = chartData.reduce(
                   (acc, curr) => acc + curr.value,
-                  0
+                  0,
                 );
-                const percent = (
-                  (value / total) *
-                  100
-                ).toFixed(1);
+                const percent =
+                  total > 0
+                    ? ((value / total) * 100).toFixed(1)
+                    : 0;
                 return [
                   `$${value.toLocaleString()} (${percent}%)`,
                   name,

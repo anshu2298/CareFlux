@@ -1,6 +1,7 @@
-import React from "react";
+import { useQuery } from "@apollo/client";
 import { HiOutlineCurrencyDollar } from "react-icons/hi";
 import { BiBox } from "react-icons/bi";
+import { GET_KEY_METRICS } from "../../graphql/queries";
 import "./KPISection.css";
 
 const KPICard = ({ label, value, icon, isLoading }) => (
@@ -17,26 +18,44 @@ const KPICard = ({ label, value, icon, isLoading }) => (
   </div>
 );
 
-const KPISection = ({ isLoading }) => {
-  // Mock data that would normally come from props or API based on filters
-  const data = {
-    revenue: "$45,231",
-    activeRentals: "1,240",
+const KPISection = ({ filters }) => {
+  const { data, loading, error } = useQuery(
+    GET_KEY_METRICS,
+    {
+      variables: {
+        storeId:
+          filters.store === "all"
+            ? null
+            : parseInt(filters.store),
+        startDate: filters.startDate,
+        endDate: filters.endDate,
+      },
+    },
+  );
+
+  if (error)
+    return (
+      <div className='error'>Error loading metrics</div>
+    );
+
+  const metrics = data?.getKeyMetrics || {
+    totalRevenue: 0,
+    activeRentals: 0,
   };
 
   return (
     <div className='kpi-section'>
       <KPICard
         label='Total Revenue'
-        value={data.revenue}
+        value={`$${metrics.totalRevenue.toLocaleString()}`}
         icon={<HiOutlineCurrencyDollar />}
-        isLoading={isLoading}
+        isLoading={loading}
       />
       <KPICard
         label='Active Rentals'
-        value={data.activeRentals}
+        value={metrics.activeRentals.toLocaleString()}
         icon={<BiBox />}
-        isLoading={isLoading}
+        isLoading={loading}
       />
     </div>
   );
